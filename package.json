@@ -1,0 +1,24 @@
+{
+	"name": "@john_chioma/terntribe_build",
+	"version": "1.0.0",
+	"description": "Backend Role Role Assessments for Terntribe BUILD",
+	"main": "app.js",
+	"type": "module",
+	"scripts": {
+		"dev": "nodemon ./app.js",
+		"start": "node app.js",
+		"test": "NODE_ENV=test node --test --experimental-test-coverage"
+	},
+	"author": "John Chioma Ugbewi",
+	"license": "ISC",
+	"dependencies": {
+		"express": "^4.21.2",
+		"lowdb": "^7.0.1",
+		"supertest": "^7.0.0",
+		"validator": "^13.12.0"
+	},
+	"devDependencies": {
+		"eslint": "^9.17.0",
+		"nodemon": "^3.1.9"
+	}
+}
