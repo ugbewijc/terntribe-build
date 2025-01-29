@@ -27,6 +27,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(port, () => {
+  console.log(import.meta.dirname);  
     console.log(`app listening on port ${port}`)
   })
 

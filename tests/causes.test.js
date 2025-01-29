@@ -538,20 +538,28 @@ describe('Causes API TESTS', () => {
             causeId = response.body.data[0].id;
         })
         test('should delete cause by a valid causeId and return a 201 status code', async () => {
-            const response = await request(app).delete(`/causes/${causeId}`);
-            assert.strictEqual(response.status, 201);
+            const response = await request(app)
+            .delete(`/causes/${causeId}`)
+            .expect('Content-Type', /json/)
+            .expect(201);
             assert(Array.isArray(response.body.data));
         });
         test('should return a 404 status code if the cause is not found', async () => {
-            const response = await request(app).delete(`/causes/${Date.now()}`);
-            assert.strictEqual(response.status, 404);
+            const response = await request(app)
+            .delete(`/causes/${Date.now()}`)
+            .expect('Content-Type', /json/)
+            .expect(404);
             assert(Array.isArray(response.body.data));
             assert.strictEqual(typeof response.body.data[0], 'string');
         })
-        //     // Verify the cause has been deleted
-//     const getResponse = await request(app).get(`/causes/${causeId}`);
-//     assert.strictEqual(getResponse.status, 404);
-// });
+        test('should return a 404 status code for deleted cause', async () => {
+            const response = await request(app)
+            .delete(`/causes/${causeId}`)
+            .expect('Content-Type', /json/)
+            .expect(404);
+            assert(Array.isArray(response.body.data));
+            assert.strictEqual(typeof response.body.data[0], 'string');
+        })
     });
 })
 
