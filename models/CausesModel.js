@@ -1,10 +1,11 @@
 /**
  * 
  */
-import db from "./lowdb.js";
+import {db} from "./lowdb.js";
 
 export default class CausesModel {
     static async getAllCauses() {
+        // console.log(import.meta.);
         return db.data.causes || [];
     }
 

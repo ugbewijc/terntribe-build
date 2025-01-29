@@ -4,10 +4,13 @@
  */
 import express from 'express';
 import causesRouter from './routes/causes.js';
-
+import { initilizeDb } from './models/lowdb.js';
 const app = express();
 app.use(express.json());
-
+(()=>{
+  console.log('initilizing db');
+    initilizeDb();
+})()
 const port = process.env.PORT || 3000;
 
 app.use('/causes', causesRouter);
@@ -26,8 +29,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ data: 'Something went wrong!' });
 });
 
-app.listen(port, () => {
-  console.log(import.meta.dirname);  
+app.listen(port, () => { 
     console.log(`app listening on port ${port}`)
   })
 
