@@ -10,16 +10,17 @@ export default class CausesController {
         try {
             // Fetch all causes from the database
             const causes = await CausesModel.getAllCauses();
-            
+
             // Send causes in the response with a success status code
             res.status(200).json({
                 data: causes
             });
         } catch (error) {
-            // Send an error response with a not found status code
-            res.status(404).json({
-                data: "Unable to retrieve cause"
-            });
+            if (error instanceof Error)
+                // Send an error response with a not found status code
+                res.status(404).json({
+                    data: "Unable to retrieve cause"
+                });
         }
     }
 
@@ -33,11 +34,12 @@ export default class CausesController {
             }
             res.status(200).json({
                 data: [cause]
-            });   
-        } catch (error) {
-            res.status(404).json({
-                data: ["Cause not found"]
             });
+        } catch (error) {
+            if (error instanceof Error)
+                res.status(404).json({
+                    data: ["Cause not found"]
+                });
         }
     }
 
@@ -50,15 +52,16 @@ export default class CausesController {
             if (!title || !description || !imageUrl) {
                 throw new Error();
             }
-            const cause = await CausesModel.createCauses({title, description, imageUrl});
+            const cause = await CausesModel.createCauses({ title, description, imageUrl });
             res.status(201).json({
                 data: [cause]
-            });   
-        } catch (error) {
-            // console.log(error);
-            res.status(400).json({
-                data: ["Unable to create cause"]
             });
+        } catch (error) {
+            if (error instanceof Error)
+                // console.log(error);
+                res.status(400).json({
+                    data: ["Unable to create cause"]
+                });
         }
     }
 
@@ -72,15 +75,19 @@ export default class CausesController {
             if (!title || !description || !imageUrl) {
                 throw new Error();
             }
-            const cause = await CausesModel.updateCauses(id, {title, description, image_url: imageUrl});
+            const cause = await CausesModel.updateCauses(id, { title, description, image_url: imageUrl });
+            if (!cause) {
+                throw new Error();
+            }
             res.status(201).json({
                 data: [cause]
-            });   
+            });
         } catch (error) {
             // console.log(error);
-            res.status(404).json({
-                data: ["Unable to update cause"]
-            });
+            if (error instanceof Error)
+                res.status(404).json({
+                    data: ["Unable to update cause"]
+                });
         }
     }
 
@@ -95,11 +102,12 @@ export default class CausesController {
             await CausesModel.deleteCauses(id);
             res.status(201).json({
                 data: []
-            });   
-        } catch (error) {
-            res.status(404).json({
-                data: ["Cause not found"]
             });
+        } catch (error) {
+            if (error instanceof Error)
+                res.status(404).json({
+                    data: ["Cause not found"]
+                });
         }
     }
 
@@ -112,7 +120,7 @@ export default class CausesController {
             const amount = validator.escape(req.body.amount).trim();
             if (!name || !validator.isNumeric(amount) || amount <= 0 || !validator.isEmail(email)) {
                 throw new Error();
-                
+
             }
             const cause = await CausesModel.createContributions({ name, email, amount, causeId: id });
             if (!cause?.id) {
@@ -120,13 +128,13 @@ export default class CausesController {
             }
             res.status(201).json({
                 data: [cause]
-            });   
-        } catch (error) {
-            
-            res.status(404).json({
-                data: ["Unable to accept contribution"]
             });
+        } catch (error) {
+            if (error instanceof Error)
+                res.status(404).json({
+                    data: ["Unable to accept contribution"]
+                });
         }
     }
-    
+
 }

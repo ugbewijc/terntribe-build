@@ -4,13 +4,12 @@
  */
 import express from 'express';
 import causesRouter from './routes/causes.js';
-import { initilizeDb } from './models/lowdb.js';
+import { initilizeDb } from './models/db.js';
 const app = express();
 app.use(express.json());
-(()=>{
-  console.log('initilizing db');
-    initilizeDb();
-})()
+
+initilizeDb();
+
 const port = process.env.PORT || 3000;
 
 app.use('/causes', causesRouter);
@@ -20,12 +19,12 @@ app.get('', (req, res) => {
   })
 
 // General 404 handler for unmatched routes
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({ data: 'Not Found' });
 });
 
 // General error handler for uncaught errors
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   res.status(500).json({ data: 'Something went wrong!' });
 });
 

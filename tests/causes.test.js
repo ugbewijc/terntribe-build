@@ -1,18 +1,17 @@
 import { test, before, after, describe } from 'node:test';
 import assert from 'node:assert';
 import request from 'supertest';
-// import fs from 'fs/promises';
+import fs from 'fs/promises';
 import app from '../app.js';
 
-let causeIds = [];
-const invalidEmails =[
+const invalidEmails = [
     'test',
     'test@',
     'test@com',
     'test@.com.',
     'test@.com@',
     'test@.com@.com',
-    ]
+]
 const invalidAmounts = [
     'test',
     'te11',
@@ -21,8 +20,8 @@ const invalidAmounts = [
     0,
     -1,
     '-1',
-    '-0.1',    
-    ]
+    '-0.1',
+]
 before(async () => {
     // Clear the test database
     //   await fs.writeFile('db.json', JSON.stringify({ causes: [] }));
@@ -30,24 +29,23 @@ before(async () => {
 
 after(async () => {
     // Remove the test database
-    //   await fs.unlink('db_test.json');
+    try {
+        await fs.unlink('test_db.sqlite');
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            console.log('The test database does not exist');
+        }
+        return
+    }
+
 });
 
 describe('Causes API TESTS', () => {
-    before(async () => {
-        // Clear the test database
-        // await fs.writeFile('db.json', JSON.stringify({ causes: [] }));
-    });
-
-    after(async () => {
-        // Remove the test database
-        // await fs.unlink('db_test.json');
-    });
     test('GET /causes should retrieve all causes', async () => {
         const response = await request(app)
-        .get('/causes')        
-        .expect('Content-Type', /json/)
-        .expect(200);
+            .get('/causes')
+            .expect('Content-Type', /json/)
+            .expect(200);
         assert(Array.isArray(response.body.data));
     });
     describe('POST /causes', () => {
@@ -62,9 +60,11 @@ describe('Causes API TESTS', () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(201);
-            assert(response.body.hasOwnProperty('data'));
+            // assert(response.body.hasOwnProperty('data'));
+            assert('data' in response.body);
             assert.strictEqual(Array.isArray(response.body.data), true);
-            assert(response.body.data[0].hasOwnProperty('id'));
+            // assert(response.body.data[0].hasOwnProperty('id'));
+            assert('id' in response.body.data[0]);
             assert.strictEqual(response.body.data[0].title, 'cause_name');
             assert.strictEqual(response.body.data[0].description, 'cause_description');
             assert.strictEqual(response.body.data[0].image_url, 'image_URL');
@@ -185,23 +185,27 @@ describe('Causes API TESTS', () => {
             const response = await request(app).get('/causes');
             causeId = response.body.data[0].id;
         })
-        test('should retrieve a specific cause by ID with status code 200', async () => {            
+        test('should retrieve a specific cause by ID with status code 200', async () => {
             const response = await request(app)
-            .get(`/causes/${causeId}`)
-            .expect('Content-Type', /json/)
-            .expect(200);
+                .get(`/causes/${causeId}`)
+                .expect('Content-Type', /json/)
+                .expect(200);
             assert.strictEqual(Array.isArray(response.body.data), true);
-            assert(response.body.data[0].hasOwnProperty('id'));
+            assert('id' in response.body.data[0]);
             assert.strictEqual(response.body.data[0].id, causeId);
-            assert(response.body.data[0].hasOwnProperty('title'));
-            assert(response.body.data[0].hasOwnProperty('description'));
-            assert(response.body.data[0].hasOwnProperty('image_url'));
+            assert('title' in response.body.data[0]);
+            assert('description' in response.body.data[0]);
+            assert('image_url' in response.body.data[0]);
+            // assert(response.body.data[0].hasOwnProperty('id'));
+            // assert(response.body.data[0].hasOwnProperty('title'));
+            // assert(response.body.data[0].hasOwnProperty('description'));
+            // assert(response.body.data[0].hasOwnProperty('image_url'));
         });
         test('should return a 404 status code if the cause is not found, with error message(string)', async () => {
             const response = await request(app)
-            .get(`/causes/${Date.now()}`)            
-            .expect('Content-Type', /json/)
-            .expect(404);
+                .get(`/causes/${Date.now()}`)
+                .expect('Content-Type', /json/)
+                .expect(404);
             assert.strictEqual(Array.isArray(response.body.data), true);
             assert.strictEqual(typeof response.body.data[0], 'string');
         });
@@ -371,11 +375,12 @@ describe('Causes API TESTS', () => {
                 .expect('Content-Type', /json/)
                 .expect(201);
             assert.strictEqual(Array.isArray(response.body.data), true);
-            assert.strictEqual.hasOwnProperty(response.body.data[0], 'id');
+            // assert.strictEqual.hasOwnProperty(response.body.data[0], 'id');
+            assert.strictEqual('id' in response.body.data[0], true);
             assert.strictEqual(response.body.data[0].name, 'contributor_name');
             assert.strictEqual(response.body.data[0].email, 'test@test.com');
-            assert.strictEqual(response.body.data[0].amount, '200');
-            assert.strictEqual(Number(response.body.data[0].causeId), causeId);
+            assert.strictEqual(response.body.data[0].amount, 200);
+            assert.strictEqual(response.body.data[0].causeId, causeId);
         });
         test('should return a 404 status code if the cause is not found', async () => {
             const response = await request(app)
@@ -539,24 +544,24 @@ describe('Causes API TESTS', () => {
         })
         test('should delete cause by a valid causeId and return a 201 status code', async () => {
             const response = await request(app)
-            .delete(`/causes/${causeId}`)
-            .expect('Content-Type', /json/)
-            .expect(201);
+                .delete(`/causes/${causeId}`)
+                .expect('Content-Type', /json/)
+                .expect(201);
             assert(Array.isArray(response.body.data));
         });
         test('should return a 404 status code if the cause is not found', async () => {
             const response = await request(app)
-            .delete(`/causes/${Date.now()}`)
-            .expect('Content-Type', /json/)
-            .expect(404);
+                .delete(`/causes/${Date.now()}`)
+                .expect('Content-Type', /json/)
+                .expect(404);
             assert(Array.isArray(response.body.data));
             assert.strictEqual(typeof response.body.data[0], 'string');
         })
         test('should return a 404 status code for deleted cause', async () => {
             const response = await request(app)
-            .delete(`/causes/${causeId}`)
-            .expect('Content-Type', /json/)
-            .expect(404);
+                .delete(`/causes/${causeId}`)
+                .expect('Content-Type', /json/)
+                .expect(404);
             assert(Array.isArray(response.body.data));
             assert.strictEqual(typeof response.body.data[0], 'string');
         })

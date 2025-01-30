@@ -1,61 +1,91 @@
 /**
  * 
  */
-import {db} from "./lowdb.js";
+import { dbSqlite3 } from "./db.js";
 
 export default class CausesModel {
     static async getAllCauses() {
-        // console.log(import.meta.);
-        return db.data.causes || [];
+        return new Promise((resolve, reject) => {
+            const getCauses = dbSqlite3.prepare(`SELECT * FROM causes`);
+            getCauses.all([], (err, rows) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(rows);
+            });
+        });
     }
 
     static async getCausesById(id) {
-        return db.data.causes.find(cause => cause.id == id) || [];
+        return new Promise((resolve, reject) => {
+            const getCausesById = dbSqlite3.prepare(`SELECT * FROM causes WHERE id = ?`);
+            getCausesById.get([id], (err, rows) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(rows);
+            });
+        })
     }
 
     static async createCauses(cause) {
+
         const { title, description, imageUrl } = cause;
-        const newCause = { id: Date.now(), title, description, image_url: imageUrl };
-        db.data.causes.push(newCause);
-        await db.write();        
-        return newCause;
+        const testCreate = dbSqlite3.prepare(`INSERT INTO causes (id, title, description, image_url) VALUES (?, ?, ?, ?)
+                RETURNING id, title, description, image_url`);
+        return new Promise((resolve, reject) => {
+            testCreate.get([`${Date.now()}`, title, description, imageUrl], (err, rows) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(rows);
+            })
+            testCreate.finalize();
+        });
     }
 
     static async updateCauses(id, cause) {
-        const index = db.data.causes.findIndex(cause => cause.id == id);
-        if(index < 0) {
-            throw new Error();
-        }
-        db.data.causes[index] = { ...db.data.causes[index], ...cause };
-        await db.write();
-        return db.data.causes[index];
+        const { title, description, image_url } = cause;
+        const causeData = dbSqlite3.prepare(`UPDATE causes SET title = ?, description = ?, image_url = ? WHERE id = ? RETURNING id, title, description, image_url`);
+        return new Promise((resolve, reject) => {
+            causeData.get([title, description, image_url, id], (err, rows) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(rows);
+            })
+            causeData.finalize();
+        });
     }
 
     static async deleteCauses(id) {
-        const index = db.data.causes.findIndex(cause => cause.id == id);
-        if(index < 0) {
-            throw new Error();
-        }
-        // uncomment the below line to delete all contributions for the cause
-        // db.data.contributions = db.data.contributions.filter(contribution => contribution.causeId != id);
-        db.data.causes.splice(index, 1);
-        await db.write();
-        return id;
+        return new Promise((resolve, reject) => {
+            const deleteCause = dbSqlite3.prepare(`DELETE FROM causes WHERE id = ?`);
+            deleteCause.get([id], (err, rows) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(rows);
+            })
+        })
     }
 
-    // static async getAllContributions() {
-    //     return db.data.contributions || [];
-    // }
-
     static async createContributions(contribution) {
-        const { name, email, amount, causeId } = contribution;
-        const cause = await this.getCausesById(causeId);
-        if(cause.length == 0) {
+        const validateCause = await this.getCausesById(contribution.causeId);
+        if (!validateCause) {
             throw new Error();
         }
-        const newContribution = { id: Date.now(), name, email, amount, causeId };
-        db.data.contributions.push(newContribution);
-        await db.write();
-        return newContribution;
+        const { name, email, amount, causeId } = contribution;
+        const testCreate = dbSqlite3.prepare(`INSERT INTO contributions (id, name, email, amount, causeId) VALUES (?, ?, ?, ?, ?)
+                RETURNING id, name, email, amount, causeId`);
+        return new Promise((resolve, reject) => {
+            testCreate.get([`${Date.now()}`, name, email, amount, causeId], (err, rows) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(rows);
+            })
+            testCreate.finalize();
+        })
     }
 }
